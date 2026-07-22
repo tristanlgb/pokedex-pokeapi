@@ -4,6 +4,7 @@ import { Header } from './components/Header';
 import { Pagination } from './components/Pagination';
 import { PokemonGrid } from './components/PokemonGrid';
 import { PokemonModal } from './components/PokemonModal';
+import { PokemonResearchLab } from './components/PokemonResearchLab';
 import { getPokemonByType, getPokemonDetails, getPokemonList } from './api/pokeApi';
 import { useFavorites } from './hooks/useFavorites';
 import type { PokemonDetails } from './types';
@@ -173,6 +174,8 @@ function App() {
             <span>{showFavorites ? 'favoritos' : 'Pokémon disponibles'}</span>
           </div>
         </section>
+
+        <PokemonResearchLab />
 
         {!showFavorites && (
           <Filters
