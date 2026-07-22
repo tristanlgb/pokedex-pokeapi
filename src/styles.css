@@ -994,6 +994,277 @@ main {
   }
 }
 
+.pokeball-experience {
+  display: grid;
+  grid-template-columns: minmax(240px, 0.72fr) minmax(0, 1.28fr);
+  gap: clamp(24px, 5vw, 64px);
+  align-items: center;
+  margin: 72px 0;
+  padding: clamp(24px, 4vw, 52px);
+  border: 1px solid rgba(129, 140, 248, 0.2);
+  border-radius: 32px;
+  background:
+    radial-gradient(circle at 75% 20%, rgba(79, 70, 229, 0.15), transparent 38%),
+    linear-gradient(145deg, rgba(10, 18, 32, 0.98), rgba(17, 24, 39, 0.98));
+  color: #f8fafc;
+  overflow: hidden;
+}
+
+.experience-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #a5b4fc;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.experience-copy h2 {
+  margin: 14px 0 16px;
+  max-width: 520px;
+  font-size: clamp(2rem, 4vw, 3.4rem);
+  line-height: 0.98;
+  letter-spacing: -0.045em;
+}
+
+.experience-copy > p {
+  max-width: 540px;
+  color: #cbd5e1;
+  line-height: 1.7;
+}
+
+.experience-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.experience-metrics span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 10px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: 999px;
+  color: #cbd5e1;
+  font-size: 0.76rem;
+}
+
+.experience-stage {
+  min-width: 0;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 24px;
+  background: rgba(2, 6, 23, 0.7);
+  box-shadow: 0 28px 80px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+}
+
+.scene-frame {
+  position: relative;
+  height: min(54vw, 520px);
+  min-height: 380px;
+  touch-action: none;
+}
+
+.scene-frame canvas {
+  display: block;
+}
+
+.scene-loading,
+.pokeball-fallback {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  color: #94a3b8;
+  text-align: center;
+}
+
+.pokeball-fallback {
+  align-content: center;
+  gap: 24px;
+  padding: 28px;
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.16), transparent 55%);
+}
+
+.pokeball-fallback p {
+  max-width: 330px;
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.fallback-ball {
+  --ball-color: #ef3340;
+  position: relative;
+  width: min(220px, 52vw);
+  aspect-ratio: 1;
+  border: 14px solid #111827;
+  border-radius: 50%;
+  background: linear-gradient(to bottom, var(--ball-color) 0 44%, #111827 44% 56%, #f8fafc 56% 100%);
+  box-shadow: inset -22px -18px 38px rgba(15, 23, 42, 0.32), 0 28px 50px rgba(0, 0, 0, 0.3);
+}
+
+.fallback-ball span {
+  position: absolute;
+  inset: 50% auto auto 50%;
+  width: 58px;
+  aspect-ratio: 1;
+  border: 12px solid #111827;
+  border-radius: 50%;
+  background: #f8fafc;
+  transform: translate(-50%, -50%);
+}
+
+.scene-controls {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 18px;
+  align-items: end;
+  padding: 18px;
+  border-top: 1px solid rgba(148, 163, 184, 0.15);
+  background: rgba(15, 23, 42, 0.98);
+}
+
+.scene-controls fieldset {
+  min-width: 0;
+  padding: 0;
+  border: 0;
+}
+
+.scene-controls legend {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 10px;
+  color: #94a3b8;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.finish-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.finish-options button,
+.scene-actions button {
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 12px;
+  background: rgba(30, 41, 59, 0.8);
+  color: #e2e8f0;
+  cursor: pointer;
+  transition: transform 160ms ease-out, border-color 160ms ease-out, background 160ms ease-out;
+}
+
+.finish-options button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 10px;
+  font-size: 0.72rem;
+}
+
+.finish-options button > span {
+  width: 12px;
+  aspect-ratio: 1;
+  border: 2px solid rgba(255, 255, 255, 0.45);
+  border-radius: 50%;
+  background: var(--swatch);
+}
+
+.finish-options button[aria-pressed='true'] {
+  border-color: #a5b4fc;
+  background: rgba(79, 70, 229, 0.26);
+}
+
+.scene-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.scene-actions button {
+  padding: 11px 13px;
+  white-space: nowrap;
+}
+
+.scene-actions .primary-scene-action {
+  border-color: #6366f1;
+  background: #4f46e5;
+  color: white;
+  font-weight: 800;
+}
+
+.finish-options button:hover,
+.scene-actions button:hover:not(:disabled) {
+  border-color: #a5b4fc;
+  transform: translateY(-2px);
+}
+
+.finish-options button:focus-visible,
+.scene-actions button:focus-visible {
+  outline: 3px solid rgba(165, 180, 252, 0.65);
+  outline-offset: 3px;
+}
+
+.scene-actions button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+@media (max-width: 900px) {
+  .pokeball-experience {
+    grid-template-columns: 1fr;
+  }
+
+  .scene-frame {
+    height: min(80vw, 520px);
+  }
+}
+
+@media (max-width: 620px) {
+  .pokeball-experience {
+    margin: 48px 0;
+    padding: 18px;
+    border-radius: 24px;
+  }
+
+  .scene-frame {
+    height: 400px;
+    min-height: 0;
+  }
+
+  .scene-controls {
+    grid-template-columns: 1fr;
+  }
+
+  .scene-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .scene-actions button {
+    white-space: normal;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .finish-options button,
+  .scene-actions button {
+    transition: none;
+  }
+
+  .finish-options button:hover,
+  .scene-actions button:hover:not(:disabled) {
+    transform: none;
+  }
+}
+
 .pagination {
   display: flex;
   align-items: center;

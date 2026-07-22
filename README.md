@@ -123,3 +123,11 @@ The project uses Vitest and React Testing Library for user-facing component test
 - `npm run test:e2e` runs the Chromium research flow with a deterministic mocked AI stream.
 - `npm run test:all` runs the unit suite, production build, and Playwright flow in sequence.
 - `.github/workflows/test.yml` runs the same checks on every push and pull request, blocking merges when a check fails.
+
+## Interactive 3D Poké Ball lab
+
+The capstone now includes a touch-ready 3D Poké Ball viewer built with React Three Fiber and lightweight procedural geometry. Users can drag or swipe to inspect it, pinch or scroll to zoom, switch among three material finishes, pause auto-rotation, and trigger an animated opening sequence with reactive light. The canvas is code-split and only requested when the experience approaches the viewport; reduced-motion preferences and devices reporting 4 GB of memory or less receive a designed static fallback instead.
+
+**FE-10 performance note:** the normal application entry is 96.68 kB gzip, while the isolated 3D chunk is 228.51 kB gzip and is never part of the initial request. The scene contains no external model or texture payload, caps device pixel ratio at 1.5×, limits shadow maps to 512 px, and uses a small fixed geometry count. In a desktop Chromium smoke test it held the browser's display refresh rate during rotation; the DPR cap and static low-power fallback keep mobile cost bounded.
+
+With more time, I would add a compressed GLB Pokémon companion with meshopt, WebGPU capability detection, and a small performance HUD for reviewer-visible frame timing.

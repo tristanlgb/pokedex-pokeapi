@@ -5,6 +5,7 @@ import { Pagination } from './components/Pagination';
 import { PokemonGrid } from './components/PokemonGrid';
 import { PokemonModal } from './components/PokemonModal';
 import { PokemonResearchLab } from './components/PokemonResearchLab';
+import { PokeballExperience } from './components/PokeballExperience';
 import { getPokemonByType, getPokemonDetails, getPokemonList } from './api/pokeApi';
 import { useFavorites } from './hooks/useFavorites';
 import type { PokemonDetails } from './types';
@@ -176,6 +177,8 @@ function App() {
         </section>
 
         <PokemonResearchLab />
+
+        <PokeballExperience />
 
         {!showFavorites && (
           <Filters

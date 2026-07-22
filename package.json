@@ -14,11 +14,14 @@
   },
   "dependencies": {
     "@ai-sdk/react": "^3.0.235",
+    "@react-three/drei": "^9.122.0",
+    "@react-three/fiber": "^8.17.10",
     "@vitejs/plugin-react": "^4.3.4",
     "ai": "^6.0.233",
     "lucide-react": "^0.468.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "three": "^0.170.0",
     "typescript": "~5.6.2",
     "vite": "^6.0.5",
     "zod": "^4.4.3"
@@ -30,6 +33,7 @@
     "@testing-library/user-event": "^14.6.1",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
+    "@types/three": "^0.185.1",
     "@vercel/node": "^5.8.26",
     "@vitest/coverage-v8": "^4.1.10",
     "jsdom": "^29.1.1",
