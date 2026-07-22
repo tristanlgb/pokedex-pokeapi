@@ -114,3 +114,12 @@ The primary research flow was tested by deliberate sabotage. Controls in the liv
 | Unexpected render failure | `AppErrorBoundary` replaces the crashed tree with a safe reload action | Reload without losing stored favorites |
 
 The retry control disables itself while running, so repeated clicks cannot duplicate work. Mobile safeguards include `100dvh`, safe-area padding, blocked horizontal overflow, and a 16px input size to prevent Safari focus zoom. Checkpoint screenshots are captured after the automated browser sabotage pass.
+
+## Automated testing
+
+The project uses Vitest and React Testing Library for user-facing component tests and Playwright for the primary end-to-end research flow. Tests query semantic roles and accessible labels, so visual class renames do not break the suite. The AI chat route is mocked in every automated test; no test calls the real AI or PokéAPI research endpoint.
+
+- `npm run test:unit` runs nine component tests covering empty, pending, streaming, output, error, form-validation, and tool-result behavior.
+- `npm run test:e2e` runs the Chromium research flow with a deterministic mocked AI stream.
+- `npm run test:all` runs the unit suite, production build, and Playwright flow in sequence.
+- `.github/workflows/test.yml` runs the same checks on every push and pull request, blocking merges when a check fails.

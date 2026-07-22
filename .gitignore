@@ -3,5 +3,9 @@ dist
 .env
 .DS_Store
 *.log
+.coverage
+coverage
+playwright-report
+test-results
 .vercel
 .env*

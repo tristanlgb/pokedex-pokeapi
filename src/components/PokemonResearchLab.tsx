@@ -1,12 +1,10 @@
 import { useChat } from '@ai-sdk/react';
-import { AlertTriangle, ArrowRight, Bot, Braces, Clock3, Gauge, Search, Scissors, WifiOff } from 'lucide-react';
+import { ArrowRight, Bot, Braces, Clock3, Gauge, Search, Scissors, WifiOff } from 'lucide-react';
 import { DefaultChatTransport } from 'ai';
 import { type FormEvent, useMemo, useState } from 'react';
-import type { PokemonInsightResult } from '../../api/tools/get-pokemon-insight';
 import { ChatFailureCard, type FailureKind } from './ChatFailureCard';
 import { MotionActionButton, type MotionActionState } from './MotionActionButton';
-import { PokemonInsightCard } from './PokemonInsightCard';
-import { PokemonInsightSkeleton } from './PokemonInsightSkeleton';
+import { ToolPartRenderer, type InsightToolPart } from './ToolPartRenderer';
 
 type SabotageMode = 'none' | 'network' | 'rate-limit' | 'mid-stream' | 'slow' | 'malformed';
 
@@ -21,15 +19,6 @@ async function checkpointFetch(input: RequestInfo | URL, init?: RequestInit) {
 
   return fetch(input, init);
 }
-
-type InsightToolPart = {
-  type: 'tool-getPokemonInsight';
-  toolCallId: string;
-  state: 'input-streaming' | 'input-available' | 'output-available' | 'output-error';
-  input?: { name?: string };
-  output?: PokemonInsightResult;
-  errorText?: string;
-};
 
 function isInsightToolPart(part: { type: string }): part is InsightToolPart {
   return part.type === 'tool-getPokemonInsight';
@@ -175,41 +164,13 @@ export function PokemonResearchLab() {
           />
         )}
 
-        {!latestToolPart && !error && (
-          <div className="tool-empty">
-            <div><Bot size={28} /></div>
-            <h3>Ready for a tool call</h3>
-            <p>Choose a Pokémon above to watch structured AI move through every lifecycle state.</p>
-            <div className="empty-actions">
-              <button onClick={() => { setInput('pikachu'); runResearch('pikachu'); }}>Research Pikachu</button>
-              <button onClick={() => setInput('gengar')}>Prefill Gengar</button>
-            </div>
-          </div>
-        )}
-
-        {!error && latestToolPart?.state === 'input-streaming' && (
-          <div className="tool-input-streaming">
-            <div className="stream-orbit"><span /><span /><span /></div>
-            <div><span>Interpreting request</span><h3>The model is streaming tool input…</h3></div>
-          </div>
-        )}
-
-        {!error && latestToolPart?.state === 'input-available' && (
-          <PokemonInsightSkeleton name={latestToolPart.input?.name} />
-        )}
-
-        {!error && latestToolPart?.state === 'output-available' && latestToolPart.output && (
-          <PokemonInsightCard result={latestToolPart.output} />
-        )}
-
-        {!error && latestToolPart?.state === 'output-error' && (
-          <div className="tool-output-error">
-            <div><AlertTriangle size={28} /></div>
-            <span>Tool execution failed safely</span>
-            <h3>We couldn’t build that profile</h3>
-            <p>{latestToolPart.errorText ?? 'PokéAPI returned an unexpected response.'}</p>
-            <button onClick={() => { setInput('pikachu'); runResearch('pikachu'); }}>Recover with Pikachu</button>
-          </div>
+        {!error && (
+          <ToolPartRenderer
+            part={latestToolPart}
+            onRecover={() => { setInput('pikachu'); runResearch('pikachu'); }}
+            onResearchPikachu={() => { setInput('pikachu'); runResearch('pikachu'); }}
+            onPrefillGengar={() => setInput('gengar')}
+          />
         )}
 
       </div>
