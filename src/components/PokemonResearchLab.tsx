@@ -1,8 +1,9 @@
 import { useChat } from '@ai-sdk/react';
-import { AlertTriangle, ArrowRight, Bot, Braces, Check, LoaderCircle, Search, Zap } from 'lucide-react';
+import { AlertTriangle, ArrowRight, Bot, Braces, Check, LoaderCircle, Search } from 'lucide-react';
 import { DefaultChatTransport } from 'ai';
-import { FormEvent, useMemo, useState } from 'react';
+import { type FormEvent, useMemo, useState } from 'react';
 import type { PokemonInsightResult } from '../../api/tools/get-pokemon-insight';
+import { MotionActionButton, type MotionActionState } from './MotionActionButton';
 import { PokemonInsightCard } from './PokemonInsightCard';
 
 type InsightToolPart = {
@@ -34,6 +35,13 @@ export function PokemonResearchLab() {
   }, [messages]);
 
   const isWorking = status === 'submitted' || status === 'streaming';
+  const actionState: MotionActionState = isWorking
+    ? 'loading'
+    : latestToolPart?.state === 'output-available'
+      ? 'success'
+      : latestToolPart?.state === 'output-error' || error
+        ? 'error'
+        : 'idle';
 
   function runResearch(name: string) {
     const trimmedName = name.trim();
@@ -69,10 +77,7 @@ export function PokemonResearchLab() {
           onChange={(event) => setInput(event.target.value)}
           placeholder="Try Pikachu, Gengar, or #149"
         />
-        <button type="submit" disabled={isWorking || !input.trim()}>
-          {isWorking ? <LoaderCircle className="spin-icon" size={18} /> : <Zap size={18} />}
-          {isWorking ? 'Researching' : 'Run tool'}
-        </button>
+        <MotionActionButton state={actionState} disabled={!input.trim()} />
       </form>
 
       <div className="example-row">
@@ -86,6 +91,12 @@ export function PokemonResearchLab() {
           Test designed failure
         </button>
       </div>
+
+      <p className="motion-note">
+        <strong>Motion recipe:</strong> 220ms state crossfades use an ease-out curve for quick acknowledgement;
+        hover/press feedback uses 160ms so it feels immediate. Only transform and opacity move. Success and
+        error remain readable for 1.65s before returning to idle.
+      </p>
 
       <div className="state-rail" aria-label="Tool lifecycle">
         <div className={latestToolPart ? 'complete' : 'active'}><span>1</span> Request</div>
@@ -151,4 +162,3 @@ export function PokemonResearchLab() {
     </section>
   );
 }
-

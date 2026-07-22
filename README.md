@@ -90,3 +90,9 @@ The server route lives at [`api/chat.ts`](api/chat.ts). It uses AI SDK's UI mess
 ### Deployment
 
 No provider API key is required for the deployed evaluation demo. To let a model choose among multiple tools later, pass `pokemonTools` to AI SDK `streamText` and configure AI Gateway or another provider; no secrets should be committed to this repository.
+
+## Motion with intent: research action button
+
+The research submit control is a reusable stateful button with six deliberate conditions: idle, hover/focus, loading, success, error, and disabled. Every label/icon transition crossfades and travels a few pixels using only `transform` and `opacity`; background states are layered and faded rather than swapping the button layout. The UI provides deterministic success triggers (`Gengar` and `Charizard`) and a deterministic error trigger (`missingno`) so reviewers can inspect both paths.
+
+State content uses a **220ms cubic-bezier ease-out**: fast enough to acknowledge the action immediately while retaining a readable handoff. Hover and press feedback use **160ms** for a tighter physical response. Success and error remain visible for **1.65 seconds** before returning to idle. The native disabled state prevents spam clicks, `:focus-visible` provides a keyboard ring, and `prefers-reduced-motion` removes travel/spin/shake while retaining labels, icons, and state colors.
