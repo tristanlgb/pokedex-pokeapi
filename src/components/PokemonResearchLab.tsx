@@ -1,5 +1,5 @@
 import { useChat } from '@ai-sdk/react';
-import { ArrowRight, Bot, Braces, Clock3, Gauge, Search, Scissors, WifiOff } from 'lucide-react';
+import { ArrowRight, Bot, Braces, Clock3, Gauge, Search, Scissors, Square, WifiOff } from 'lucide-react';
 import { DefaultChatTransport } from 'ai';
 import { type FormEvent, useMemo, useState } from 'react';
 import { ChatFailureCard, type FailureKind } from './ChatFailureCard';
@@ -28,7 +28,7 @@ export function PokemonResearchLab() {
   const [input, setInput] = useState('pikachu');
   const [lastPokemon, setLastPokemon] = useState('pikachu');
   const [failureKind, setFailureKind] = useState<FailureKind>('unknown');
-  const { messages, sendMessage, regenerate, status, error, clearError } = useChat({
+  const { messages, sendMessage, regenerate, status, error, clearError, stop } = useChat({
     transport: new DefaultChatTransport({ api: '/api/chat', fetch: checkpointFetch }),
   });
 
@@ -100,7 +100,13 @@ export function PokemonResearchLab() {
           onChange={(event) => setInput(event.target.value)}
           placeholder="Try Pikachu, Gengar, or #149"
         />
-        <MotionActionButton state={actionState} disabled={!input.trim()} />
+        {isWorking ? (
+          <button className="stop-research-button" type="button" onClick={() => stop()} aria-label="Stop Pokémon research" autoFocus>
+            <Square size={16} fill="currentColor" /> Stop
+          </button>
+        ) : (
+          <MotionActionButton state={actionState} disabled={!input.trim()} />
+        )}
       </form>
 
       {!input.trim() && (
@@ -154,7 +160,7 @@ export function PokemonResearchLab() {
         <div className={latestToolPart?.state?.startsWith('output') ? 'active' : ''}><span>4</span> Result</div>
       </div>
 
-      <div className="tool-stage" aria-live="polite">
+      <div className="tool-stage" aria-live="polite" aria-atomic="false" aria-relevant="additions text">
         {error && (
           <ChatFailureCard
             kind={failureKind}

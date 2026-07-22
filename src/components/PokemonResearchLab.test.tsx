@@ -3,21 +3,30 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { PokemonResearchLab } from './PokemonResearchLab';
 
-const sendMessage = vi.fn();
+const chatMock = vi.hoisted(() => ({
+  sendMessage: vi.fn(),
+  stop: vi.fn(),
+  status: 'ready',
+}));
 
 vi.mock('@ai-sdk/react', () => ({
   useChat: () => ({
     messages: [],
-    sendMessage,
+    sendMessage: chatMock.sendMessage,
     regenerate: vi.fn(),
-    status: 'ready',
+    status: chatMock.status,
     error: undefined,
     clearError: vi.fn(),
+    stop: chatMock.stop,
   }),
 }));
 
 describe('PokemonResearchLab form', () => {
-  beforeEach(() => sendMessage.mockClear());
+  beforeEach(() => {
+    chatMock.sendMessage.mockClear();
+    chatMock.stop.mockClear();
+    chatMock.status = 'ready';
+  });
 
   it('blocks empty input and explains how to continue', async () => {
     render(<PokemonResearchLab />);
@@ -33,9 +42,18 @@ describe('PokemonResearchLab form', () => {
     await userEvent.clear(input);
     await userEvent.type(input, '  eevee  ');
     await userEvent.click(screen.getByRole('button', { name: 'Run tool' }));
-    expect(sendMessage).toHaveBeenCalledWith(
+    expect(chatMock.sendMessage).toHaveBeenCalledWith(
       { text: 'Research eevee and build its battle profile.' },
       { body: { sabotage: 'none' } },
     );
+  });
+
+  it('exposes a focused stop action while the AI response is streaming', async () => {
+    chatMock.status = 'streaming';
+    render(<PokemonResearchLab />);
+    const stopButton = screen.getByRole('button', { name: 'Stop Pokémon research' });
+    expect(stopButton).toHaveFocus();
+    await userEvent.keyboard('{Enter}');
+    expect(chatMock.stop).toHaveBeenCalledOnce();
   });
 });

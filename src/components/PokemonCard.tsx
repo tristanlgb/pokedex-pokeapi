@@ -18,20 +18,16 @@ export function PokemonCard({
   onToggleFavorite,
   onOpen,
 }: PokemonCardProps) {
-  const image =
-    pokemon.sprites.other?.['official-artwork']?.front_default ??
-    pokemon.sprites.front_default;
+  const image = pokemon.sprites.front_default;
 
   return (
-    <article
-      className="pokemon-card"
-      tabIndex={0}
-      role="button"
-      onClick={() => onOpen(pokemon)}
-      onKeyDown={(event) => {
-        if (event.key === 'Enter') onOpen(pokemon);
-      }}
-    >
+    <article className="pokemon-card">
+      <button
+        type="button"
+        className="card-open-button"
+        aria-label={`View details for ${pokemon.name}`}
+        onClick={() => onOpen(pokemon)}
+      />
       <div className="card-top">
         <span className="pokemon-id">{formatId(pokemon.id)}</span>
         <button
@@ -51,7 +47,7 @@ export function PokemonCard({
 
       <div className="pokemon-image-wrapper">
         {image ? (
-          <img src={image} alt={pokemon.name} loading="lazy" />
+          <img src={image} alt="" width="150" height="150" loading="lazy" decoding="async" />
         ) : (
           <div className="image-placeholder">Sin imagen</div>
         )}
