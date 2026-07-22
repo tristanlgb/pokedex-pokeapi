@@ -1,10 +1,26 @@
 import { useChat } from '@ai-sdk/react';
-import { AlertTriangle, ArrowRight, Bot, Braces, Check, LoaderCircle, Search } from 'lucide-react';
+import { AlertTriangle, ArrowRight, Bot, Braces, Clock3, Gauge, Search, Scissors, WifiOff } from 'lucide-react';
 import { DefaultChatTransport } from 'ai';
 import { type FormEvent, useMemo, useState } from 'react';
 import type { PokemonInsightResult } from '../../api/tools/get-pokemon-insight';
+import { ChatFailureCard, type FailureKind } from './ChatFailureCard';
 import { MotionActionButton, type MotionActionState } from './MotionActionButton';
 import { PokemonInsightCard } from './PokemonInsightCard';
+import { PokemonInsightSkeleton } from './PokemonInsightSkeleton';
+
+type SabotageMode = 'none' | 'network' | 'rate-limit' | 'mid-stream' | 'slow' | 'malformed';
+
+async function checkpointFetch(input: RequestInfo | URL, init?: RequestInit) {
+  if (typeof init?.body === 'string') {
+    const body = JSON.parse(init.body) as { sabotage?: SabotageMode };
+    if (body.sabotage === 'network') {
+      await new Promise((resolve) => setTimeout(resolve, 350));
+      throw new TypeError('Network request blocked by the Checkpoint 1 sabotage control.');
+    }
+  }
+
+  return fetch(input, init);
+}
 
 type InsightToolPart = {
   type: 'tool-getPokemonInsight';
@@ -21,8 +37,10 @@ function isInsightToolPart(part: { type: string }): part is InsightToolPart {
 
 export function PokemonResearchLab() {
   const [input, setInput] = useState('pikachu');
-  const { messages, sendMessage, status, error, clearError } = useChat({
-    transport: new DefaultChatTransport({ api: '/api/chat' }),
+  const [lastPokemon, setLastPokemon] = useState('pikachu');
+  const [failureKind, setFailureKind] = useState<FailureKind>('unknown');
+  const { messages, sendMessage, regenerate, status, error, clearError } = useChat({
+    transport: new DefaultChatTransport({ api: '/api/chat', fetch: checkpointFetch }),
   });
 
   const latestToolPart = useMemo(() => {
@@ -43,11 +61,27 @@ export function PokemonResearchLab() {
         ? 'error'
         : 'idle';
 
-  function runResearch(name: string) {
+  function runResearch(name: string, sabotage: SabotageMode = 'none') {
     const trimmedName = name.trim();
     if (!trimmedName || isWorking) return;
+    setLastPokemon(trimmedName);
+    setFailureKind(
+      sabotage === 'network' || sabotage === 'rate-limit' || sabotage === 'mid-stream'
+        ? sabotage
+        : 'unknown',
+    );
     clearError();
-    void sendMessage({ text: `Research ${trimmedName} and build its battle profile.` });
+    void sendMessage(
+      { text: `Research ${trimmedName} and build its battle profile.` },
+      { body: { sabotage } },
+    );
+  }
+
+  function handleRetry() {
+    if (isWorking) return;
+    clearError();
+    setFailureKind('unknown');
+    void regenerate({ body: { sabotage: 'none' } });
   }
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -80,6 +114,10 @@ export function PokemonResearchLab() {
         <MotionActionButton state={actionState} disabled={!input.trim()} />
       </form>
 
+      {!input.trim() && (
+        <p className="field-hint" role="status">Enter a Pokémon name or number to enable research.</p>
+      )}
+
       <div className="example-row">
         <span>Quick tests</span>
         {['gengar', 'charizard'].map((name) => (
@@ -89,6 +127,25 @@ export function PokemonResearchLab() {
         ))}
         <button className="failure-test" onClick={() => { setInput('missingno'); runResearch('missingno'); }} disabled={isWorking}>
           Test designed failure
+        </button>
+      </div>
+
+      <div className="failure-lab" aria-label="Checkpoint failure controls">
+        <div>
+          <span>Checkpoint 1</span>
+          <strong>Sabotage controls</strong>
+        </div>
+        <button onClick={() => runResearch(input || 'pikachu', 'slow')} disabled={isWorking}>
+          <Clock3 size={15} /> Slow response
+        </button>
+        <button onClick={() => runResearch(input || 'pikachu', 'rate-limit')} disabled={isWorking}>
+          <Gauge size={15} /> Force 429
+        </button>
+        <button onClick={() => runResearch(input || 'pikachu', 'mid-stream')} disabled={isWorking}>
+          <Scissors size={15} /> Cut mid-stream
+        </button>
+        <button onClick={() => runResearch(input || 'pikachu', 'network')} disabled={isWorking}>
+          <WifiOff size={15} /> Network offline
         </button>
       </div>
 
@@ -109,38 +166,43 @@ export function PokemonResearchLab() {
       </div>
 
       <div className="tool-stage" aria-live="polite">
+        {error && (
+          <ChatFailureCard
+            kind={failureKind}
+            pokemonName={lastPokemon}
+            busy={isWorking}
+            onRetry={handleRetry}
+          />
+        )}
+
         {!latestToolPart && !error && (
           <div className="tool-empty">
             <div><Bot size={28} /></div>
             <h3>Ready for a tool call</h3>
             <p>Choose a Pokémon above to watch structured AI move through every lifecycle state.</p>
+            <div className="empty-actions">
+              <button onClick={() => { setInput('pikachu'); runResearch('pikachu'); }}>Research Pikachu</button>
+              <button onClick={() => setInput('gengar')}>Prefill Gengar</button>
+            </div>
           </div>
         )}
 
-        {latestToolPart?.state === 'input-streaming' && (
+        {!error && latestToolPart?.state === 'input-streaming' && (
           <div className="tool-input-streaming">
             <div className="stream-orbit"><span /><span /><span /></div>
             <div><span>Interpreting request</span><h3>The model is streaming tool input…</h3></div>
           </div>
         )}
 
-        {latestToolPart?.state === 'input-available' && (
-          <div className="tool-input-ready">
-            <div className="ready-icon"><Check size={22} /></div>
-            <div>
-              <span>Input validated against Zod</span>
-              <h3>Calling PokéAPI for “{latestToolPart.input?.name}”</h3>
-              <p>The server has accepted the arguments and is assembling a structured profile.</p>
-            </div>
-            <LoaderCircle className="spin-icon" size={24} />
-          </div>
+        {!error && latestToolPart?.state === 'input-available' && (
+          <PokemonInsightSkeleton name={latestToolPart.input?.name} />
         )}
 
-        {latestToolPart?.state === 'output-available' && latestToolPart.output && (
+        {!error && latestToolPart?.state === 'output-available' && latestToolPart.output && (
           <PokemonInsightCard result={latestToolPart.output} />
         )}
 
-        {latestToolPart?.state === 'output-error' && (
+        {!error && latestToolPart?.state === 'output-error' && (
           <div className="tool-output-error">
             <div><AlertTriangle size={28} /></div>
             <span>Tool execution failed safely</span>
@@ -150,14 +212,6 @@ export function PokemonResearchLab() {
           </div>
         )}
 
-        {error && !latestToolPart && (
-          <div className="tool-output-error">
-            <div><AlertTriangle size={28} /></div>
-            <span>Connection error</span>
-            <h3>The AI route could not respond</h3>
-            <p>{error.message}</p>
-          </div>
-        )}
       </div>
     </section>
   );

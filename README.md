@@ -96,3 +96,21 @@ No provider API key is required for the deployed evaluation demo. To let a model
 The research submit control is a reusable stateful button with six deliberate conditions: idle, hover/focus, loading, success, error, and disabled. Every label/icon transition crossfades and travels a few pixels using only `transform` and `opacity`; background states are layered and faded rather than swapping the button layout. The UI provides deterministic success triggers (`Gengar` and `Charizard`) and a deterministic error trigger (`missingno`) so reviewers can inspect both paths.
 
 State content uses a **220ms cubic-bezier ease-out**: fast enough to acknowledge the action immediately while retaining a readable handoff. Hover and press feedback use **160ms** for a tighter physical response. Success and error remain visible for **1.65 seconds** before returning to idle. The native disabled state prevents spam clicks, `:focus-visible` provides a keyboard ring, and `prefers-reduced-motion` removes travel/spin/shake while retaining labels, icons, and state colors.
+
+## Checkpoint 1: resilience and failure inventory
+
+The primary research flow was tested by deliberate sabotage. Controls in the live UI make the important cases reproducible for reviewers.
+
+| Case | Deliberate handling | Recovery |
+| --- | --- | --- |
+| First-run empty state | Explains the tool and offers “Research Pikachu” and “Prefill Gengar” actions | Start from either example |
+| Empty input | Submit button is disabled and an inline instruction explains what is required | Enter a name or Pokédex number |
+| Slow response | A geometry-matched profile skeleton replaces the executing state | Resolves into the real card without a large layout jump |
+| No results / tool error | `missingno` renders a designed tool error rather than incomplete content | “Recover with Pikachu” |
+| HTTP 429 | Route returns a real 429 and `useChat.error` renders rate-limit-specific guidance | Retry only the failed Pokémon |
+| Mid-stream interruption | Route fails after validated tool input; partial output is discarded | Retry only the failed Pokémon |
+| Network failure before send | A custom transport fetch rejects before the route is reached | Retry the retained request after connectivity returns |
+| Malformed tool output | Invalid data is converted to `output-error`, never passed to the profile component | Run a valid request |
+| Unexpected render failure | `AppErrorBoundary` replaces the crashed tree with a safe reload action | Reload without losing stored favorites |
+
+The retry control disables itself while running, so repeated clicks cannot duplicate work. Mobile safeguards include `100dvh`, safe-area padding, blocked horizontal overflow, and a 16px input size to prevent Safari focus zoom. Checkpoint screenshots are captured after the automated browser sabotage pass.

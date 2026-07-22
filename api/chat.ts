@@ -20,7 +20,19 @@ export default async function handler(
     return;
   }
 
-  const { messages } = request.body as { messages: UIMessage[] };
+  const { messages, sabotage = 'none' } = request.body as {
+    messages: UIMessage[];
+    sabotage?: string;
+  };
+
+  if (sabotage === 'rate-limit') {
+    response.setHeader('Retry-After', '3');
+    response.status(429).json({
+      error: 'The research service is temporarily rate limited.',
+      retryAfterSeconds: 3,
+    });
+    return;
+  }
   const latestUserMessage = [...messages].reverse().find((message) => message.role === 'user');
   const userText = latestUserMessage?.parts
     .filter((part): part is Extract<typeof part, { type: 'text' }> => part.type === 'text')
@@ -35,6 +47,7 @@ export default async function handler(
 
   const stream = createUIMessageStream({
     originalMessages: messages,
+    onError: () => 'The research stream was interrupted. Your request is safe to retry.',
     async execute({ writer }) {
       writer.write({
         type: 'tool-input-start',
@@ -55,7 +68,25 @@ export default async function handler(
         input,
       });
 
+      if (sabotage === 'mid-stream') {
+        await new Promise((resolve) => setTimeout(resolve, 450));
+        throw new Error('The response stream was interrupted after tool input was accepted.');
+      }
+
       try {
+        if (sabotage === 'slow') {
+          await new Promise((resolve) => setTimeout(resolve, 3_200));
+        }
+
+        if (sabotage === 'malformed') {
+          writer.write({
+            type: 'tool-output-error',
+            toolCallId,
+            errorText: 'The tool returned an invalid response shape. No unsafe data was rendered.',
+          });
+          return;
+        }
+
         const output = await fetchPokemonInsight(input);
         writer.write({ type: 'tool-output-available', toolCallId, output });
       } catch (error) {
