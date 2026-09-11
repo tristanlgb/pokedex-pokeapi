@@ -11,46 +11,42 @@ type ChatFailureCardProps = {
 
 const FAILURE_COPY: Record<FailureKind, { eyebrow: string; title: string; detail: string }> = {
   network: {
-    eyebrow: 'Network unavailable',
-    title: 'The request never reached the server',
-    detail: 'Check your connection, then retry this Pokémon. Your input is still here.',
+    eyebrow: 'Sin conexión',
+    title: 'La solicitud no llegó al servidor',
+    detail: 'Revisa tu conexión y vuelve a intentarlo. Conservamos tu consulta.',
   },
   'rate-limit': {
-    eyebrow: 'Rate limit handled',
-    title: 'The research service needs a moment',
-    detail: 'Nothing was lost. Retry the same Pokémon without starting the whole flow again.',
+    eyebrow: 'Límite de solicitudes',
+    title: 'El servicio necesita un momento',
+    detail: 'Puedes reintentar con el mismo Pokémon sin volver a escribir la consulta.',
   },
   'mid-stream': {
-    eyebrow: 'Stream interrupted',
-    title: 'The connection ended during research',
-    detail: 'The partial response was discarded so an incomplete profile cannot reach the UI.',
+    eyebrow: 'Conexión interrumpida',
+    title: 'La conexión terminó durante la investigación',
+    detail: 'La respuesta parcial se descartó para evitar mostrar un perfil incompleto.',
   },
   unknown: {
-    eyebrow: 'Request failed safely',
-    title: 'The research route could not finish',
-    detail: 'The interface is still working and the last request can be retried safely.',
+    eyebrow: 'No se pudo realizar la consulta',
+    title: 'No se pudo completar la investigación',
+    detail: 'Puedes volver a intentar la última consulta.',
   },
 };
 
-export function ChatFailureCard({
-  kind,
-  pokemonName,
-  busy,
-  onRetry,
-}: ChatFailureCardProps) {
+export function ChatFailureCard({ kind, pokemonName, busy, onRetry }: ChatFailureCardProps) {
   const copy = FAILURE_COPY[kind];
 
   return (
     <div className="chat-failure" role="alert">
-      <div className="chat-failure-icon"><AlertTriangle size={28} /></div>
+      <div className="chat-failure-icon">
+        <AlertTriangle size={28} />
+      </div>
       <span>{copy.eyebrow}</span>
       <h3>{copy.title}</h3>
       <p>{copy.detail}</p>
       <button onClick={onRetry} disabled={busy}>
         {busy ? <LoaderCircle className="motion-spinner" size={18} /> : <RotateCcw size={18} />}
-        {busy ? 'Retrying…' : `Retry ${pokemonName}`}
+        {busy ? 'Reintentando…' : `Reintentar ${pokemonName}`}
       </button>
     </div>
   );
 }
-

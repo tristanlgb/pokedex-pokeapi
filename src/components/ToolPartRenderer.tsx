@@ -19,16 +19,23 @@ type ToolPartRendererProps = {
   onPrefillGengar: () => void;
 };
 
-export function ToolPartRenderer({ part, onRecover, onResearchPikachu, onPrefillGengar }: ToolPartRendererProps) {
+export function ToolPartRenderer({
+  part,
+  onRecover,
+  onResearchPikachu,
+  onPrefillGengar,
+}: ToolPartRendererProps) {
   if (!part) {
     return (
       <div className="tool-empty">
-        <div><Bot size={28} /></div>
-        <h3>Ready for a tool call</h3>
-        <p>Choose a Pokémon above to watch structured AI move through every lifecycle state.</p>
+        <div>
+          <Bot size={28} />
+        </div>
+        <h3>Todo listo para investigar</h3>
+        <p>Elige un Pokémon para conocer sus estadísticas y características.</p>
         <div className="empty-actions">
-          <button onClick={onResearchPikachu}>Research Pikachu</button>
-          <button onClick={onPrefillGengar}>Prefill Gengar</button>
+          <button onClick={onResearchPikachu}>Investigar Pikachu</button>
+          <button onClick={onPrefillGengar}>Elegir Gengar</button>
         </div>
       </div>
     );
@@ -37,22 +44,32 @@ export function ToolPartRenderer({ part, onRecover, onResearchPikachu, onPrefill
   if (part.state === 'input-streaming') {
     return (
       <div className="tool-input-streaming" role="status">
-        <div className="stream-orbit"><span /><span /><span /></div>
-        <div><span>Interpreting request</span><h3>The model is streaming tool input…</h3></div>
+        <div className="stream-orbit">
+          <span />
+          <span />
+          <span />
+        </div>
+        <div>
+          <span>Preparando consulta</span>
+          <h3>Enviando datos de la consulta…</h3>
+        </div>
       </div>
     );
   }
 
   if (part.state === 'input-available') return <PokemonInsightSkeleton name={part.input?.name} />;
-  if (part.state === 'output-available' && part.output) return <PokemonInsightCard result={part.output} />;
+  if (part.state === 'output-available' && part.output)
+    return <PokemonInsightCard result={part.output} />;
 
   return (
     <div className="tool-output-error" role="alert">
-      <div><AlertTriangle size={28} /></div>
-      <span>Tool execution failed safely</span>
-      <h3>We couldn’t build that profile</h3>
-      <p>{part.errorText ?? 'PokéAPI returned an unexpected response.'}</p>
-      <button onClick={onRecover}>Recover with Pikachu</button>
+      <div>
+        <AlertTriangle size={28} />
+      </div>
+      <span>No se pudo completar la consulta</span>
+      <h3>No pudimos crear el perfil</h3>
+      <p>{part.errorText ?? 'PokéAPI devolvió una respuesta inesperada.'}</p>
+      <button onClick={onRecover}>Probar con Pikachu</button>
     </div>
   );
 }

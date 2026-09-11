@@ -30,18 +30,18 @@ describe('PokemonResearchLab form', () => {
 
   it('blocks empty input and explains how to continue', async () => {
     render(<PokemonResearchLab />);
-    const input = screen.getByRole('textbox', { name: /Pokémon to research/i });
+    const input = screen.getByRole('textbox', { name: /Pokémon para investigar/i });
     await userEvent.clear(input);
-    expect(screen.getByRole('button', { name: 'Run tool' })).toBeDisabled();
-    expect(screen.getByRole('status')).toHaveTextContent('Enter a Pokémon name or number');
+    expect(screen.getByRole('button', { name: 'Investigar' })).toBeDisabled();
+    expect(screen.getByRole('status')).toHaveTextContent('Ingresa un nombre o número de Pokémon');
   });
 
   it('submits a trimmed validated request through the mocked chat route', async () => {
     render(<PokemonResearchLab />);
-    const input = screen.getByRole('textbox', { name: /Pokémon to research/i });
+    const input = screen.getByRole('textbox', { name: /Pokémon para investigar/i });
     await userEvent.clear(input);
     await userEvent.type(input, '  eevee  ');
-    await userEvent.click(screen.getByRole('button', { name: 'Run tool' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Investigar' }));
     expect(chatMock.sendMessage).toHaveBeenCalledWith(
       { text: 'Research eevee and build its battle profile.' },
       { body: { sabotage: 'none' } },
@@ -51,7 +51,7 @@ describe('PokemonResearchLab form', () => {
   it('exposes a focused stop action while the AI response is streaming', async () => {
     chatMock.status = 'streaming';
     render(<PokemonResearchLab />);
-    const stopButton = screen.getByRole('button', { name: 'Stop Pokémon research' });
+    const stopButton = screen.getByRole('button', { name: 'Detener investigación' });
     expect(stopButton).toHaveFocus();
     await userEvent.keyboard('{Enter}');
     expect(chatMock.stop).toHaveBeenCalledOnce();

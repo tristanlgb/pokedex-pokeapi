@@ -7,19 +7,10 @@ interface PaginationProps {
   onPageChange: (page: number) => void;
 }
 
-export function Pagination({
-  page,
-  totalPages,
-  disabled,
-  onPageChange,
-}: PaginationProps) {
+export function Pagination({ page, totalPages, disabled, onPageChange }: PaginationProps) {
   return (
     <nav className="pagination" aria-label="Paginación">
-      <button
-        type="button"
-        disabled={disabled || page <= 1}
-        onClick={() => onPageChange(page - 1)}
-      >
+      <button type="button" disabled={disabled || page <= 1} onClick={() => onPageChange(page - 1)}>
         <ChevronLeft size={19} />
         Anterior
       </button>

@@ -17,15 +17,18 @@ describe('PokeballExperience', () => {
 
   it('uses a static fallback when reduced motion is preferred', () => {
     render(<PokeballExperience />);
-    expect(screen.getByRole('img', { name: /Static Poké Ball preview/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Open Poké Ball' })).toBeDisabled();
+    expect(screen.getByRole('img', { name: /Vista estática de Poké Ball/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Abrir Poké Ball' })).toBeDisabled();
   });
 
   it('lets users change the finish in fallback mode', async () => {
     render(<PokeballExperience />);
-    const violet = screen.getByRole('button', { name: 'Use Master violet' });
+    const violet = screen.getByRole('button', { name: 'Usar Violeta maestro' });
     await userEvent.click(violet);
     expect(violet).toHaveAttribute('aria-pressed', 'true');
-    expect(screen.getByRole('button', { name: 'Use Classic red' })).toHaveAttribute('aria-pressed', 'false');
+    expect(screen.getByRole('button', { name: 'Usar Rojo clásico' })).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    );
   });
 });

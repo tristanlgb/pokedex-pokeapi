@@ -51,9 +51,15 @@ function PokeballModel({ accentColor, isOpen, autoRotate }: PokeballModelProps) 
         </mesh>
         <mesh position={[0, 0, 1.37]} rotation={[Math.PI / 2, 0, 0]}>
           <cylinderGeometry args={[0.22, 0.22, 0.08, 40]} />
-          <meshStandardMaterial color={isOpen ? '#fef08a' : '#f8fafc'} emissive={isOpen ? '#facc15' : '#000000'} emissiveIntensity={isOpen ? 1.8 : 0} />
+          <meshStandardMaterial
+            color={isOpen ? '#fef08a' : '#f8fafc'}
+            emissive={isOpen ? '#facc15' : '#000000'}
+            emissiveIntensity={isOpen ? 1.8 : 0}
+          />
         </mesh>
-        {isOpen && <pointLight position={[0, 0.35, 0]} intensity={2.5} color="#fde047" distance={5} />}
+        {isOpen && (
+          <pointLight position={[0, 0.35, 0]} intensity={2.5} color="#fde047" distance={5} />
+        )}
       </group>
     </Float>
   );
@@ -69,7 +75,12 @@ export function PokeballScene({ accentColor, isOpen, autoRotate }: PokeballScene
     >
       <color attach="background" args={['#09111f']} />
       <ambientLight intensity={1.15} />
-      <directionalLight position={[4, 5, 4]} intensity={3.2} castShadow shadow-mapSize={[512, 512]} />
+      <directionalLight
+        position={[4, 5, 4]}
+        intensity={3.2}
+        castShadow
+        shadow-mapSize={[512, 512]}
+      />
       <pointLight position={[-3, 1, 2]} intensity={2} color="#818cf8" />
       <PokeballModel accentColor={accentColor} isOpen={isOpen} autoRotate={autoRotate} />
       <ContactShadows position={[0, -1.75, 0]} opacity={0.45} scale={6} blur={2.5} far={4} />

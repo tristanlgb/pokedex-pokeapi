@@ -50,51 +50,47 @@ type PokeApiPokemon = {
 export async function fetchPokemonInsight({
   name,
 }: PokemonInsightInput): Promise<PokemonInsightResult> {
-    const normalizedName = name.trim().toLowerCase();
+  const normalizedName = name.trim().toLowerCase();
 
-    // Deliberately leave enough time for the UI to communicate the executing state.
-    await new Promise((resolve) => setTimeout(resolve, 850));
+  const response = await fetch(
+    `https://pokeapi.co/api/v2/pokemon/${encodeURIComponent(normalizedName)}`,
+    { signal: AbortSignal.timeout(8_000) },
+  );
 
-    const response = await fetch(
-      `https://pokeapi.co/api/v2/pokemon/${encodeURIComponent(normalizedName)}`,
-      { signal: AbortSignal.timeout(8_000) },
-    );
-
-    if (!response.ok) {
-      if (response.status === 404) {
-        throw new Error(`No Pokémon named “${name}” was found.`);
-      }
-      throw new Error('PokéAPI could not complete this research request.');
+  if (!response.ok) {
+    if (response.status === 404) {
+      throw new Error(`No se encontró un Pokémon llamado “${name}” en PokéAPI.`);
     }
+    throw new Error('PokéAPI no pudo completar esta consulta.');
+  }
 
-    const pokemon = (await response.json()) as PokeApiPokemon;
-    const stats = pokemon.stats.map(({ base_stat, stat }) => ({
-      name: stat.name,
-      value: base_stat,
-    }));
-    const strongestStat = stats.reduce((strongest, current) =>
-      current.value > strongest.value ? current : strongest,
-    );
-    const image =
-      pokemon.sprites.other?.['official-artwork']?.front_default ??
-      pokemon.sprites.front_default;
+  const pokemon = (await response.json()) as PokeApiPokemon;
+  const stats = pokemon.stats.map(({ base_stat, stat }) => ({
+    name: stat.name,
+    value: base_stat,
+  }));
+  const strongestStat = stats.reduce((strongest, current) =>
+    current.value > strongest.value ? current : strongest,
+  );
+  const image =
+    pokemon.sprites.other?.['official-artwork']?.front_default ?? pokemon.sprites.front_default;
 
-    if (!image) {
-      throw new Error(`Artwork for “${name}” is currently unavailable.`);
-    }
+  if (!image) {
+    throw new Error(`La ilustración de “${name}” no está disponible.`);
+  }
 
-    return {
-      id: pokemon.id,
-      name: pokemon.name,
-      image,
-      types: pokemon.types.map(({ type }) => type.name),
-      heightMeters: pokemon.height / 10,
-      weightKg: pokemon.weight / 10,
-      baseExperience: pokemon.base_experience,
-      totalStats: stats.reduce((total, stat) => total + stat.value, 0),
-      strongestStat,
-      stats,
-    };
+  return {
+    id: pokemon.id,
+    name: pokemon.name,
+    image,
+    types: pokemon.types.map(({ type }) => type.name),
+    heightMeters: pokemon.height / 10,
+    weightKg: pokemon.weight / 10,
+    baseExperience: pokemon.base_experience,
+    totalStats: stats.reduce((total, stat) => total + stat.value, 0),
+    strongestStat,
+    stats,
+  };
 }
 
 export const getPokemonInsight = tool({

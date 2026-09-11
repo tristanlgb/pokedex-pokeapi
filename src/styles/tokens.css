@@ -1,0 +1,207 @@
+:root {
+  font-family:
+    Inter,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    sans-serif;
+  color: #263342;
+  background: #f7f8fa;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  --color-ink: #263342;
+  --color-muted: #657385;
+  --color-accent: #bd3645;
+  --color-border: #e2e7ed;
+  --color-surface: #fff;
+  --radius-card: 22px;
+  --space-1: 8px;
+  --space-2: 16px;
+  --space-3: 24px;
+  --space-4: 32px;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100dvh;
+}
+button,
+input,
+select {
+  font: inherit;
+}
+button,
+a,
+input,
+select {
+  -webkit-tap-highlight-color: transparent;
+}
+button {
+  cursor: pointer;
+}
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+button,
+select {
+  min-height: 42px;
+}
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+summary:focus-visible {
+  outline: 3px solid #5a77b6;
+  outline-offset: 3px;
+}
+a {
+  color: inherit;
+}
+img {
+  max-width: 100%;
+  object-fit: contain;
+}
+button {
+  color: inherit;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+.skip-link {
+  position: fixed;
+  top: -80px;
+  left: 16px;
+  z-index: 100;
+  padding: 14px;
+  background: white;
+}
+.skip-link:focus {
+  top: 10px;
+}
+.primary-button {
+  border: 0;
+  border-radius: 12px;
+  color: white;
+  background: var(--color-accent);
+  padding: 12px 22px;
+  font-weight: 700;
+}
+.text-button {
+  border: 0;
+  background: transparent;
+  color: var(--color-accent);
+  font-weight: 600;
+  padding: 8px 12px;
+}
+.type-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.type-badge {
+  padding: 5px 10px;
+  border-radius: 7px;
+  font-size: 11px;
+  font-weight: 700;
+  display: inline-block;
+}
+.type-normal {
+  background: #e8ebef;
+  color: #4d5969;
+}
+.type-fire {
+  background: #ffede2;
+  color: #9c3b1d;
+}
+.type-water {
+  background: #e4eefc;
+  color: #285797;
+}
+.type-electric {
+  background: #fff4cb;
+  color: #796000;
+}
+.type-grass {
+  background: #e3f2e8;
+  color: #256241;
+}
+.type-ice {
+  background: #dff4f7;
+  color: #246979;
+}
+.type-fighting {
+  background: #fae5e3;
+  color: #9d3636;
+}
+.type-poison {
+  background: #f0e6f9;
+  color: #744297;
+}
+.type-ground {
+  background: #f3eadc;
+  color: #79552b;
+}
+.type-flying {
+  background: #eaeefa;
+  color: #52629b;
+}
+.type-psychic {
+  background: #fbe4ee;
+  color: #a23d67;
+}
+.type-bug {
+  background: #edf1db;
+  color: #5d6b2c;
+}
+.type-rock {
+  background: #ede9df;
+  color: #6e5e36;
+}
+.type-ghost {
+  background: #eee8f8;
+  color: #655183;
+}
+.type-dragon {
+  background: #eae6ff;
+  color: #55459a;
+}
+.type-dark {
+  background: #e8e6ed;
+  color: #4d465c;
+}
+.type-steel {
+  background: #e5edef;
+  color: #496672;
+}
+.type-fairy {
+  background: #f9e8f2;
+  color: #974975;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation: none !important;
+    transition: none !important;
+  }
+}

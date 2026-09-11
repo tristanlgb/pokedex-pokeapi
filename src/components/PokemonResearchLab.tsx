@@ -1,185 +1,113 @@
-import { useChat } from '@ai-sdk/react';
-import { ArrowRight, Bot, Braces, Clock3, Gauge, Search, Scissors, Square, WifiOff } from 'lucide-react';
-import { DefaultChatTransport } from 'ai';
-import { type FormEvent, useMemo, useState } from 'react';
-import { ChatFailureCard, type FailureKind } from './ChatFailureCard';
-import { MotionActionButton, type MotionActionState } from './MotionActionButton';
-import { ToolPartRenderer, type InsightToolPart } from './ToolPartRenderer';
-
-type SabotageMode = 'none' | 'network' | 'rate-limit' | 'mid-stream' | 'slow' | 'malformed';
-
-async function checkpointFetch(input: RequestInfo | URL, init?: RequestInit) {
-  if (typeof init?.body === 'string') {
-    const body = JSON.parse(init.body) as { sabotage?: SabotageMode };
-    if (body.sabotage === 'network') {
-      await new Promise((resolve) => setTimeout(resolve, 350));
-      throw new TypeError('Network request blocked by the Checkpoint 1 sabotage control.');
-    }
-  }
-
-  return fetch(input, init);
-}
-
-function isInsightToolPart(part: { type: string }): part is InsightToolPart {
-  return part.type === 'tool-getPokemonInsight';
-}
-
+import { Search, Square } from 'lucide-react';
+import { usePokemonResearch } from '../hooks/usePokemonResearch';
+import { ChatFailureCard } from './ChatFailureCard';
+import { MotionActionButton } from './MotionActionButton';
+import { ToolPartRenderer } from './ToolPartRenderer';
+import { ResearchDemoControls } from './ResearchDemoControls';
+import '../styles/research.css';
 export function PokemonResearchLab() {
-  const [input, setInput] = useState('pikachu');
-  const [lastPokemon, setLastPokemon] = useState('pikachu');
-  const [failureKind, setFailureKind] = useState<FailureKind>('unknown');
-  const { messages, sendMessage, regenerate, status, error, clearError, stop } = useChat({
-    transport: new DefaultChatTransport({ api: '/api/chat', fetch: checkpointFetch }),
-  });
-
-  const latestToolPart = useMemo(() => {
-    for (const message of [...messages].reverse()) {
-      for (const part of [...message.parts].reverse()) {
-        if (isInsightToolPart(part)) return part;
-      }
-    }
-    return undefined;
-  }, [messages]);
-
-  const isWorking = status === 'submitted' || status === 'streaming';
-  const actionState: MotionActionState = isWorking
-    ? 'loading'
-    : latestToolPart?.state === 'output-available'
-      ? 'success'
-      : latestToolPart?.state === 'output-error' || error
-        ? 'error'
-        : 'idle';
-
-  function runResearch(name: string, sabotage: SabotageMode = 'none') {
-    const trimmedName = name.trim();
-    if (!trimmedName || isWorking) return;
-    setLastPokemon(trimmedName);
-    setFailureKind(
-      sabotage === 'network' || sabotage === 'rate-limit' || sabotage === 'mid-stream'
-        ? sabotage
-        : 'unknown',
-    );
-    clearError();
-    void sendMessage(
-      { text: `Research ${trimmedName} and build its battle profile.` },
-      { body: { sabotage } },
-    );
-  }
-
-  function handleRetry() {
-    if (isWorking) return;
-    clearError();
-    setFailureKind('unknown');
-    void regenerate({ body: { sabotage: 'none' } });
-  }
-
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    runResearch(input);
-  }
-
+  const research = usePokemonResearch();
+  const { input, setInput, isWorking, runResearch } = research;
   return (
     <section className="research-lab" id="research-lab">
       <div className="lab-heading">
         <div>
-          <span className="lab-kicker"><Bot size={16} /> Generative UI lab</span>
-          <h2>Ask the Pokédex agent to research a Pokémon</h2>
+          <span className="lab-kicker">Investigación Pokémon</span>
+          <h2>Descubre su perfil de combate</h2>
           <p>
-            The model chooses a typed server tool. Its input streams live, PokéAPI runs on the server,
-            and the structured result becomes an interactive battle profile.
+            Consulta un Pokémon y recibe sus datos desde PokéAPI. Esta demostración utiliza una
+            herramienta determinista: no interviene un modelo de inteligencia artificial.
           </p>
         </div>
-        <div className="contract-pill"><Braces size={18} /> Zod validated</div>
       </div>
-
-      <form className="research-form" onSubmit={handleSubmit}>
+      <form
+        className="research-form"
+        onSubmit={(event) => {
+          event.preventDefault();
+          runResearch(input);
+        }}
+      >
         <Search size={20} />
         <input
-          aria-label="Pokémon to research"
+          aria-label="Pokémon para investigar"
           value={input}
+          maxLength={40}
           onChange={(event) => setInput(event.target.value)}
-          placeholder="Try Pikachu, Gengar, or #149"
+          placeholder="Pikachu, Gengar o #149"
         />
         {isWorking ? (
-          <button className="stop-research-button" type="button" onClick={() => stop()} aria-label="Stop Pokémon research" autoFocus>
-            <Square size={16} fill="currentColor" /> Stop
+          <button
+            className="stop-research-button"
+            type="button"
+            onClick={() => research.stop()}
+            aria-label="Detener investigación"
+            autoFocus
+          >
+            <Square size={16} />
+            Detener
           </button>
         ) : (
-          <MotionActionButton state={actionState} disabled={!input.trim()} />
+          <MotionActionButton state={research.actionState} disabled={!input.trim()} />
         )}
       </form>
-
       {!input.trim() && (
-        <p className="field-hint" role="status">Enter a Pokémon name or number to enable research.</p>
+        <p className="field-hint" role="status">
+          Ingresa un nombre o número de Pokémon para continuar.
+        </p>
       )}
-
       <div className="example-row">
-        <span>Quick tests</span>
+        <span>Prueba con</span>
         {['gengar', 'charizard'].map((name) => (
-          <button key={name} onClick={() => { setInput(name); runResearch(name); }} disabled={isWorking}>
+          <button
+            key={name}
+            disabled={isWorking}
+            onClick={() => {
+              setInput(name);
+              runResearch(name);
+            }}
+          >
             {name}
           </button>
         ))}
-        <button className="failure-test" onClick={() => { setInput('missingno'); runResearch('missingno'); }} disabled={isWorking}>
-          Test designed failure
-        </button>
       </div>
-
-      <div className="failure-lab" aria-label="Checkpoint failure controls">
-        <div>
-          <span>Checkpoint 1</span>
-          <strong>Sabotage controls</strong>
-        </div>
-        <button onClick={() => runResearch(input || 'pikachu', 'slow')} disabled={isWorking}>
-          <Clock3 size={15} /> Slow response
-        </button>
-        <button onClick={() => runResearch(input || 'pikachu', 'rate-limit')} disabled={isWorking}>
-          <Gauge size={15} /> Force 429
-        </button>
-        <button onClick={() => runResearch(input || 'pikachu', 'mid-stream')} disabled={isWorking}>
-          <Scissors size={15} /> Cut mid-stream
-        </button>
-        <button onClick={() => runResearch(input || 'pikachu', 'network')} disabled={isWorking}>
-          <WifiOff size={15} /> Network offline
-        </button>
-      </div>
-
-      <p className="motion-note">
-        <strong>Motion recipe:</strong> 220ms state crossfades use an ease-out curve for quick acknowledgement;
-        hover/press feedback uses 160ms so it feels immediate. Only transform and opacity move. Success and
-        error remain readable for 1.65s before returning to idle.
-      </p>
-
-      <div className="state-rail" aria-label="Tool lifecycle">
-        <div className={latestToolPart ? 'complete' : 'active'}><span>1</span> Request</div>
-        <ArrowRight size={15} />
-        <div className={latestToolPart?.state === 'input-streaming' ? 'active' : latestToolPart ? 'complete' : ''}><span>2</span> Input</div>
-        <ArrowRight size={15} />
-        <div className={latestToolPart?.state === 'input-available' ? 'active' : latestToolPart?.state?.startsWith('output') ? 'complete' : ''}><span>3</span> Execute</div>
-        <ArrowRight size={15} />
-        <div className={latestToolPart?.state?.startsWith('output') ? 'active' : ''}><span>4</span> Result</div>
-      </div>
-
-      <div className="tool-stage" aria-live="polite" aria-atomic="false" aria-relevant="additions text">
-        {error && (
+      {research.stopped && (
+        <p role="status">Investigación detenida. Puedes iniciar otra consulta.</p>
+      )}
+      <div className="tool-stage" aria-live="polite" aria-atomic="false">
+        {research.error ? (
           <ChatFailureCard
-            kind={failureKind}
-            pokemonName={lastPokemon}
+            kind={research.failureKind}
+            pokemonName={research.lastPokemon}
             busy={isWorking}
-            onRetry={handleRetry}
+            onRetry={research.retry}
           />
-        )}
-
-        {!error && (
+        ) : (
           <ToolPartRenderer
-            part={latestToolPart}
-            onRecover={() => { setInput('pikachu'); runResearch('pikachu'); }}
-            onResearchPikachu={() => { setInput('pikachu'); runResearch('pikachu'); }}
+            part={
+              isWorking && !research.latestToolPart
+                ? {
+                    type: 'tool-getPokemonInsight',
+                    toolCallId: 'pending',
+                    state: 'input-streaming',
+                  }
+                : research.latestToolPart
+            }
+            onRecover={() => {
+              setInput('pikachu');
+              runResearch('pikachu');
+            }}
+            onResearchPikachu={() => {
+              setInput('pikachu');
+              runResearch('pikachu');
+            }}
             onPrefillGengar={() => setInput('gengar')}
           />
         )}
-
       </div>
+      <ResearchDemoControls
+        busy={isWorking}
+        onRun={(mode) => runResearch(input || 'pikachu', mode)}
+      />
     </section>
   );
 }

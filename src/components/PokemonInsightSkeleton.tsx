@@ -4,11 +4,11 @@ type PokemonInsightSkeletonProps = {
 
 export function PokemonInsightSkeleton({ name }: PokemonInsightSkeletonProps) {
   return (
-    <article className="insight-skeleton" aria-label={`Building ${name ?? 'Pokémon'} profile`}>
+    <article className="insight-skeleton" aria-label={`Preparando perfil de ${name ?? 'Pokémon'}`}>
       <div className="skeleton-heading">
         <div className="skeleton-art skeleton-pulse" />
         <div>
-          <span>Input validated · querying PokéAPI</span>
+          <span>Consultando datos en PokéAPI</span>
           <div className="skeleton-line skeleton-line-title skeleton-pulse" />
           <div className="skeleton-line skeleton-line-chip skeleton-pulse" />
         </div>
@@ -29,4 +29,3 @@ export function PokemonInsightSkeleton({ name }: PokemonInsightSkeletonProps) {
     </article>
   );
 }
-

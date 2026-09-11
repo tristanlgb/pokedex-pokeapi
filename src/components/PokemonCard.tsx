@@ -1,77 +1,97 @@
-import { Heart, Ruler, Weight } from 'lucide-react';
+import { Heart, GitCompareArrows, Plus, Check } from 'lucide-react';
+import type { CSSProperties } from 'react';
 import type { PokemonDetails } from '../types';
-
+import { artwork, formatId, TYPE_COLORS, TYPE_LABELS } from '../lib/pokemon';
 interface PokemonCardProps {
   pokemon: PokemonDetails;
   favorite: boolean;
+  comparing: boolean;
+  inTeam: boolean;
+  compareFull: boolean;
+  teamFull: boolean;
   onToggleFavorite: (id: number) => void;
+  onCompare: (id: number) => void;
+  onTeam: (id: number) => void;
   onOpen: (pokemon: PokemonDetails) => void;
 }
-
-function formatId(id: number) {
-  return `#${String(id).padStart(4, '0')}`;
-}
-
 export function PokemonCard({
   pokemon,
   favorite,
+  comparing,
+  inTeam,
+  compareFull,
+  teamFull,
   onToggleFavorite,
+  onCompare,
+  onTeam,
   onOpen,
 }: PokemonCardProps) {
-  const image = pokemon.sprites.front_default;
-
   return (
-    <article className="pokemon-card">
-      <button
-        type="button"
-        className="card-open-button"
-        aria-label={`View details for ${pokemon.name}`}
-        onClick={() => onOpen(pokemon)}
-      />
+    <article
+      className="pokemon-card"
+      style={
+        { '--type-color': TYPE_COLORS[pokemon.types[0]?.type.name] ?? '#697486' } as CSSProperties
+      }
+    >
       <div className="card-top">
         <span className="pokemon-id">{formatId(pokemon.id)}</span>
         <button
-          type="button"
-          className={`heart-button ${favorite ? 'favorite' : ''}`}
+          className={'heart-button ' + (favorite ? 'favorite' : '')}
           aria-label={
-            favorite ? 'Quitar de favoritos' : 'Agregar a favoritos'
+            (favorite ? 'Quitar de favoritos a ' : 'Agregar a favoritos a ') + pokemon.name
           }
-          onClick={(event) => {
-            event.stopPropagation();
-            onToggleFavorite(pokemon.id);
-          }}
+          aria-pressed={favorite}
+          onClick={() => onToggleFavorite(pokemon.id)}
         >
-          <Heart size={21} fill={favorite ? 'currentColor' : 'none'} />
+          <Heart size={19} fill={favorite ? 'currentColor' : 'none'} />
         </button>
       </div>
-
-      <div className="pokemon-image-wrapper">
-        {image ? (
-          <img src={image} alt="" width="150" height="150" loading="lazy" decoding="async" />
-        ) : (
-          <div className="image-placeholder">Sin imagen</div>
-        )}
-      </div>
-
-      <h2>{pokemon.name}</h2>
-
-      <div className="type-row">
-        {pokemon.types.map(({ type }) => (
-          <span key={type.name} className={`type-badge type-${type.name}`}>
-            {type.name}
-          </span>
-        ))}
-      </div>
-
-      <div className="mini-stats">
-        <span>
-          <Ruler size={16} />
-          {(pokemon.height / 10).toFixed(1)} m
-        </span>
-        <span>
-          <Weight size={16} />
-          {(pokemon.weight / 10).toFixed(1)} kg
-        </span>
+      <button
+        className="card-detail"
+        onClick={() => onOpen(pokemon)}
+        aria-label={'Ver detalles de ' + pokemon.name}
+      >
+        <div className="pokemon-image-wrapper">
+          {artwork(pokemon) ? (
+            <img
+              src={artwork(pokemon)!}
+              alt=""
+              width="180"
+              height="180"
+              loading="lazy"
+              decoding="async"
+            />
+          ) : (
+            <span>Sin imagen</span>
+          )}
+        </div>
+        <h3>{pokemon.name}</h3>
+        <div className="type-row">
+          {pokemon.types.map(({ type }) => (
+            <span key={type.name} className={'type-badge type-' + type.name}>
+              {TYPE_LABELS[type.name] ?? type.name}
+            </span>
+          ))}
+        </div>
+      </button>
+      <div className="card-actions">
+        <button
+          aria-label={(comparing ? 'Quitar del comparador a ' : 'Comparar a ') + pokemon.name}
+          aria-pressed={comparing}
+          disabled={compareFull && !comparing}
+          onClick={() => onCompare(pokemon.id)}
+        >
+          <GitCompareArrows size={15} />
+          {comparing ? 'Elegido' : 'Comparar'}
+        </button>
+        <button
+          aria-label={(inTeam ? 'Quitar del equipo a ' : 'Agregar al equipo a ') + pokemon.name}
+          aria-pressed={inTeam}
+          disabled={teamFull && !inTeam}
+          onClick={() => onTeam(pokemon.id)}
+        >
+          {inTeam ? <Check size={15} /> : <Plus size={15} />}Equipo
+        </button>
       </div>
     </article>
   );

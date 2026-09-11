@@ -9,16 +9,13 @@ type MotionActionButtonProps = {
 };
 
 const STATE_LABELS: Record<MotionActionState, string> = {
-  idle: 'Run tool',
-  loading: 'Researching',
-  success: 'Profile ready',
-  error: 'Try again',
+  idle: 'Investigar',
+  loading: 'Investigando',
+  success: 'Perfil listo',
+  error: 'Reintentar',
 };
 
-export function MotionActionButton({
-  state,
-  disabled = false,
-}: MotionActionButtonProps) {
+export function MotionActionButton({ state, disabled = false }: MotionActionButtonProps) {
   const [visibleState, setVisibleState] = useState<MotionActionState>(state);
 
   useEffect(() => {
@@ -45,20 +42,21 @@ export function MotionActionButton({
       <span className="motion-button-bg motion-button-bg-error" aria-hidden="true" />
 
       <span className="motion-button-content motion-button-idle" aria-hidden="true">
-        <Zap size={18} /> Run tool
+        <Zap size={18} /> Investigar
       </span>
       <span className="motion-button-content motion-button-loading" aria-hidden="true">
-        <LoaderCircle className="motion-spinner" size={18} /> Researching
+        <LoaderCircle className="motion-spinner" size={18} /> Investigando
       </span>
       <span className="motion-button-content motion-button-success" aria-hidden="true">
-        <CircleCheck size={19} /> Profile ready
+        <CircleCheck size={19} /> Perfil listo
       </span>
       <span className="motion-button-content motion-button-error" aria-hidden="true">
-        <RotateCcw size={18} /> Try again
+        <RotateCcw size={18} /> Reintentar
       </span>
 
-      <span className="sr-only" aria-live="polite">{STATE_LABELS[visibleState]}</span>
+      <span className="sr-only" aria-live="polite">
+        {STATE_LABELS[visibleState]}
+      </span>
     </button>
   );
 }
-

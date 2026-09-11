@@ -1,0 +1,10 @@
+node_modules
+dist
+.npm-cache
+playwright-report
+test-results
+package-lock.json
+*.tsbuildinfo
+vite.config.js
+vite.config.d.ts
+docs

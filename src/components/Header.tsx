@@ -1,59 +1,62 @@
-import { Heart, Search } from 'lucide-react';
-
+import { Search, X } from 'lucide-react';
+import { useEffect, useState, type FormEvent } from 'react';
 interface HeaderProps {
   query: string;
-  favoriteCount: number;
-  onQueryChange: (value: string) => void;
-  onSearch: () => void;
-  onShowFavorites: () => void;
-  showingFavorites: boolean;
+  onSearch: (value: string) => void;
 }
-
-export function Header({
-  query,
-  favoriteCount,
-  onQueryChange,
-  onSearch,
-  onShowFavorites,
-  showingFavorites,
-}: HeaderProps) {
-  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+export function Header({ query, onSearch }: HeaderProps) {
+  const [draft, setDraft] = useState(query);
+  useEffect(() => setDraft(query), [query]);
+  function submit(event: FormEvent) {
     event.preventDefault();
-    onSearch();
+    onSearch(draft.trim());
   }
-
   return (
     <header className="app-header">
-      <div className="brand">
+      <a
+        className="brand"
+        href="/"
+        aria-label="Pokédex, inicio"
+        onClick={(event) => {
+          event.preventDefault();
+          setDraft('');
+          onSearch('');
+        }}
+      >
         <div className="pokeball" aria-hidden="true">
           <span />
         </div>
         <div>
-          <h1>Pokédex</h1>
-          <p>React + TypeScript + PokéAPI</p>
+          <h1>
+            Pokédex<span className="brand-dot">.</span>
+          </h1>
+          <p>Tu próxima aventura empieza aquí</p>
         </div>
-      </div>
-
-      <form className="search-form" onSubmit={handleSubmit}>
-        <Search size={20} />
+      </a>
+      <form className="search-form" onSubmit={submit} role="search">
+        <Search size={20} aria-hidden="true" />
         <input
           aria-label="Buscar Pokémon"
-          value={query}
-          onChange={(event) => onQueryChange(event.target.value)}
-          placeholder="Buscar por nombre o número..."
+          value={draft}
+          onChange={(event) => setDraft(event.target.value)}
+          placeholder="Nombre o número: Pikachu, #025…"
+          maxLength={80}
         />
+        {draft && (
+          <button
+            className="clear-search"
+            type="button"
+            aria-label="Limpiar búsqueda"
+            onClick={() => {
+              setDraft('');
+              onSearch('');
+            }}
+          >
+            <X size={18} />
+          </button>
+        )}
         <button type="submit">Buscar</button>
       </form>
-
-      <button
-        className={`favorites-button ${showingFavorites ? 'active' : ''}`}
-        onClick={onShowFavorites}
-        type="button"
-      >
-        <Heart size={20} fill={showingFavorites ? 'currentColor' : 'none'} />
-        Favoritos
-        <span>{favoriteCount}</span>
-      </button>
     </header>
   );
 }

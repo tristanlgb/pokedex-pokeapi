@@ -1,38 +1,14 @@
-import { useEffect, useState } from 'react';
-
-const STORAGE_KEY = 'pokedex-favorites';
-
-function readFavorites(): number[] {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    return stored ? (JSON.parse(stored) as number[]) : [];
-  } catch {
-    return [];
-  }
-}
-
+import { useStoredIds } from './useStoredIds';
 export function useFavorites() {
-  const [favorites, setFavorites] = useState<number[]>(readFavorites);
-
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(favorites));
-  }, [favorites]);
-
-  function toggleFavorite(id: number) {
-    setFavorites((current) =>
-      current.includes(id)
-        ? current.filter((favoriteId) => favoriteId !== id)
-        : [...current, id],
-    );
-  }
-
-  function isFavorite(id: number) {
-    return favorites.includes(id);
-  }
-
+  const {
+    ids: favorites,
+    toggle: toggleFavorite,
+    storageError,
+  } = useStoredIds('pokedex-favorites');
   return {
     favorites,
     toggleFavorite,
-    isFavorite,
+    isFavorite: (id: number) => favorites.includes(id),
+    storageError,
   };
 }

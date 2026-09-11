@@ -1,246 +1,243 @@
-import { useEffect, useMemo, useState } from 'react';
-import { Filters } from './components/Filters';
+import { lazy, Suspense, useRef } from 'react';
+import { BookOpen, FlaskConical, GitCompareArrows, Heart, Users } from 'lucide-react';
 import { Header } from './components/Header';
+import { Filters } from './components/Filters';
+import { PokemonGrid, CatalogSkeleton } from './components/PokemonGrid';
 import { Pagination } from './components/Pagination';
-import { PokemonGrid } from './components/PokemonGrid';
 import { PokemonModal } from './components/PokemonModal';
-import { PokemonResearchLab } from './components/PokemonResearchLab';
-import { PokeballExperience } from './components/PokeballExperience';
-import { getPokemonByType, getPokemonDetails, getPokemonList } from './api/pokeApi';
+import { CollectionView } from './components/CollectionViews';
 import { useFavorites } from './hooks/useFavorites';
-import type { PokemonDetails } from './types';
-
-const PAGE_SIZE = 20;
-
+import { useStoredIds } from './hooks/useStoredIds';
+import { useCatalogLocation, type View } from './hooks/useCatalogLocation';
+import { PAGE_SIZE, usePokemonCatalog } from './hooks/usePokemonCatalog';
+const ResearchLab = lazy(() =>
+  import('./components/PokemonResearchLab').then((module) => ({
+    default: module.PokemonResearchLab,
+  })),
+);
+const PokeballLab = lazy(() =>
+  import('./components/PokeballExperience').then((module) => ({
+    default: module.PokeballExperience,
+  })),
+);
+const VIEW_COPY: Record<View, { title: string; subtitle: string }> = {
+  explore: {
+    title: 'Un mundo por descubrir.',
+    subtitle: 'Encuentra a tus favoritos. Compara sus fortalezas. Forma tu próximo equipo.',
+  },
+  favorites: {
+    title: 'Tus favoritos, siempre cerca.',
+    subtitle: 'Una colección de los Pokémon que hacen especial tu aventura.',
+  },
+  compare: {
+    title: 'Conoce sus diferencias.',
+    subtitle: 'Compara dos Pokémon y encuentra el compañero ideal para tu estrategia.',
+  },
+  team: {
+    title: 'Seis lugares. Tu estrategia.',
+    subtitle: 'Construye tu equipo y descubre sus fortalezas y debilidades compartidas.',
+  },
+  lab: {
+    title: 'Un espacio para experimentar.',
+    subtitle: 'Explora una Poké Ball en 3D y prueba la investigación de perfiles.',
+  },
+};
 function App() {
-  const [pokemon, setPokemon] = useState<PokemonDetails[]>([]);
-  const [page, setPage] = useState(1);
-  const [totalPokemon, setTotalPokemon] = useState(0);
-  const [selectedType, setSelectedType] = useState('all');
-  const [query, setQuery] = useState('');
-  const [selectedPokemon, setSelectedPokemon] =
-    useState<PokemonDetails | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [showFavorites, setShowFavorites] = useState(false);
-
-  const { favorites, toggleFavorite, isFavorite } = useFavorites();
-
-  const totalPages = Math.max(1, Math.ceil(totalPokemon / PAGE_SIZE));
-
-  useEffect(() => {
-    if (showFavorites) return;
-
-    const controller = new AbortController();
-
-    async function loadPokemon() {
-      try {
-        setLoading(true);
-        setError('');
-
-        if (selectedType !== 'all') {
-          const byType = await getPokemonByType(selectedType);
-          setPokemon(byType);
-          setTotalPokemon(byType.length);
-          return;
-        }
-
-        const response = await getPokemonList(
-          PAGE_SIZE,
-          (page - 1) * PAGE_SIZE,
-        );
-
-        const details = await Promise.all(
-          response.results.map((item) => getPokemonDetails(item.name)),
-        );
-
-        if (!controller.signal.aborted) {
-          setPokemon(details);
-          setTotalPokemon(response.count);
-        }
-      } catch (loadError) {
-        if (!controller.signal.aborted) {
-          setError(
-            loadError instanceof Error
-              ? loadError.message
-              : 'Ocurrió un error inesperado.',
-          );
-        }
-      } finally {
-        if (!controller.signal.aborted) {
-          setLoading(false);
-        }
-      }
-    }
-
-    void loadPokemon();
-
-    return () => controller.abort();
-  }, [page, selectedType, showFavorites]);
-
-  const visiblePokemon = useMemo(() => {
-    if (!showFavorites) return pokemon;
-    return pokemon.filter((item) => favorites.includes(item.id));
-  }, [pokemon, favorites, showFavorites]);
-
-  async function handleSearch() {
-    const normalized = query.trim().toLowerCase();
-
-    if (!normalized) {
-      setPage(1);
-      setSelectedType('all');
-      setShowFavorites(false);
-      return;
-    }
-
-    try {
-      setLoading(true);
-      setError('');
-      setShowFavorites(false);
-      const result = await getPokemonDetails(normalized);
-      setPokemon([result]);
-      setTotalPokemon(1);
-      setPage(1);
-      setSelectedType('all');
-    } catch (searchError) {
-      setPokemon([]);
-      setTotalPokemon(0);
-      setError(
-        searchError instanceof Error
-          ? searchError.message
-          : 'No se pudo realizar la búsqueda.',
-      );
-    } finally {
-      setLoading(false);
-    }
+  const { location, update } = useCatalogLocation();
+  const { favorites, toggleFavorite, storageError } = useFavorites();
+  const comparison = useStoredIds('pokedex-comparison', 2);
+  const team = useStoredIds('pokedex-team', 6);
+  const isCatalog = location.view === 'explore' || location.view === 'favorites';
+  const catalog = usePokemonCatalog(location, favorites, isCatalog);
+  const catalogRef = useRef<HTMLElement>(null);
+  const totalPages = Math.max(1, Math.ceil(catalog.total / PAGE_SIZE));
+  const page = Math.min(location.page, totalPages);
+  function navigate(view: View) {
+    update({ view, page: 1, pokemon: '' });
   }
-
-  async function handleShowFavorites() {
-    if (showFavorites) {
-      setShowFavorites(false);
-      setPage(1);
-      return;
-    }
-
-    try {
-      setLoading(true);
-      setError('');
-
-      const favoriteDetails = await Promise.all(
-        favorites.map((id) => getPokemonDetails(id)),
-      );
-
-      setPokemon(favoriteDetails);
-      setShowFavorites(true);
-      setSelectedType('all');
-      setTotalPokemon(favoriteDetails.length);
-    } catch {
-      setError('No se pudieron cargar los favoritos.');
-    } finally {
-      setLoading(false);
-    }
+  function explore() {
+    update({ view: 'explore', query: '', type: 'all', generation: 'all', page: 1 });
   }
-
-  function handleTypeChange(type: string) {
-    setSelectedType(type);
-    setShowFavorites(false);
-    setPage(1);
-    setQuery('');
-  }
-
+  const tabs = [
+    { view: 'explore' as const, label: 'Explorar', icon: BookOpen },
+    { view: 'favorites' as const, label: 'Favoritos', icon: Heart, count: favorites.length },
+    {
+      view: 'compare' as const,
+      label: 'Comparar',
+      icon: GitCompareArrows,
+      count: comparison.ids.length + '/2',
+    },
+    { view: 'team' as const, label: 'Mi equipo', icon: Users, count: team.ids.length + '/6' },
+    { view: 'lab' as const, label: 'Laboratorio', icon: FlaskConical },
+  ];
   return (
     <div className="app-shell">
+      <a href="#catalog" className="skip-link">
+        Ir al contenido
+      </a>
       <Header
-        query={query}
-        favoriteCount={favorites.length}
-        onQueryChange={setQuery}
-        onSearch={handleSearch}
-        onShowFavorites={handleShowFavorites}
-        showingFavorites={showFavorites}
+        query={location.query}
+        onSearch={(query) =>
+          update({ query, page: 1, view: 'explore', type: 'all', generation: 'all', pokemon: '' })
+        }
       />
-
       <main>
+        <nav className="view-nav" aria-label="Secciones de la Pokédex">
+          {tabs.map(({ view, label, icon: Icon, count }) => (
+            <button
+              key={view}
+              aria-current={location.view === view ? 'page' : undefined}
+              onClick={() => navigate(view)}
+            >
+              <Icon size={17} />
+              <span>{label}</span>
+              {count !== undefined && <small>{count}</small>}
+            </button>
+          ))}
+        </nav>
         <section className="intro">
           <div>
-            <span className="eyebrow">Explora el mundo Pokémon</span>
-            <h2>Encuentra, compara y guarda tus Pokémon favoritos</h2>
-            <p>
-              Consulta información real desde PokéAPI, filtra por tipo y revisa
-              estadísticas detalladas.
-            </p>
+            <span className="eyebrow">Tu guía Pokémon</span>
+            <h2>{VIEW_COPY[location.view].title}</h2>
+            <p>{VIEW_COPY[location.view].subtitle}</p>
           </div>
-
-          <div className="counter-card">
-            <strong>{showFavorites ? favorites.length : totalPokemon}</strong>
-            <span>{showFavorites ? 'favoritos' : 'Pokémon disponibles'}</span>
+          <div className="intro-emblem" aria-hidden="true">
+            <div className="pokeball">
+              <span />
+            </div>
           </div>
         </section>
-
-        <PokemonResearchLab />
-
-        <PokeballExperience />
-
-        {!showFavorites && (
-          <Filters
-            selectedType={selectedType}
-            onTypeChange={handleTypeChange}
-          />
+        {(storageError || comparison.storageError || team.storageError) && (
+          <p role="status" className="storage-notice">
+            {storageError || comparison.storageError || team.storageError}
+          </p>
         )}
-
-        {loading && (
-          <div className="loading-state">
-            <div className="loader" />
-            <p>Cargando Pokémon...</p>
-          </div>
-        )}
-
-        {!loading && error && (
-          <div className="error-state">
-            <h2>Algo salió mal</h2>
-            <p>{error}</p>
-          </div>
-        )}
-
-        {!loading && !error && (
-          <>
-            <PokemonGrid
-              pokemon={visiblePokemon}
-              isFavorite={isFavorite}
-              onToggleFavorite={toggleFavorite}
-              onOpen={setSelectedPokemon}
+        <section id="catalog" ref={catalogRef} tabIndex={-1}>
+          {isCatalog && (
+            <>
+              <Filters location={location} onChange={(patch) => update({ ...patch, page: 1 })} />
+              <div className="section-heading">
+                <h2>
+                  {location.query
+                    ? 'Resultados para “' + location.query + '”'
+                    : location.view === 'favorites'
+                      ? 'Tu colección'
+                      : 'Pokédex nacional'}
+                </h2>
+                <span aria-live="polite">
+                  {catalog.loading
+                    ? 'Buscando Pokémon…'
+                    : catalog.error
+                      ? 'Sin conexión'
+                      : catalog.total + ' Pokémon'}
+                </span>
+              </div>
+              {catalog.loading && (
+                <>
+                  <p role="status" className="loading-label">
+                    {location.sort === 'total' || location.sort === 'speed'
+                      ? 'Preparando el orden global · ' +
+                        catalog.progress +
+                        ' perfiles cargados. Puedes cambiar los filtros para cancelar.'
+                      : 'Cargando Pokémon…'}
+                  </p>
+                  <CatalogSkeleton />
+                </>
+              )}
+              {!catalog.loading && catalog.error && (
+                <div className="error-state" role="alert">
+                  <h3>No pudimos cargar el catálogo</h3>
+                  <p>{catalog.error}</p>
+                  <button className="primary-button" onClick={catalog.retry}>
+                    Reintentar
+                  </button>
+                </div>
+              )}
+              {!catalog.loading &&
+                !catalog.error &&
+                (catalog.total ? (
+                  <>
+                    <PokemonGrid
+                      pokemon={catalog.pokemon}
+                      favorites={favorites}
+                      comparing={comparison.ids}
+                      team={team.ids}
+                      onToggleFavorite={toggleFavorite}
+                      onCompare={comparison.toggle}
+                      onTeam={team.toggle}
+                      onOpen={(pokemon) => update({ pokemon: String(pokemon.id) })}
+                    />
+                    {totalPages > 1 && (
+                      <Pagination
+                        page={page}
+                        totalPages={totalPages}
+                        disabled={catalog.loading}
+                        onPageChange={(nextPage) => {
+                          update({ page: nextPage });
+                          catalogRef.current?.scrollIntoView({
+                            behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches
+                              ? 'instant'
+                              : 'smooth',
+                            block: 'start',
+                          });
+                        }}
+                      />
+                    )}
+                  </>
+                ) : (
+                  <div className="empty-state">
+                    <Heart size={34} />
+                    <h3>
+                      {location.view === 'favorites' && !favorites.length
+                        ? 'Todavía no guardaste favoritos'
+                        : 'No encontramos coincidencias'}
+                    </h3>
+                    <p>
+                      {location.view === 'favorites' && !favorites.length
+                        ? 'Toca el corazón de una tarjeta para comenzar tu colección.'
+                        : 'Prueba otro nombre o restablece los filtros.'}
+                    </p>
+                    <button className="primary-button" onClick={explore}>
+                      Explorar todos
+                    </button>
+                  </div>
+                ))}
+            </>
+          )}
+          {(location.view === 'compare' || location.view === 'team') && (
+            <CollectionView
+              mode={location.view}
+              ids={location.view === 'compare' ? comparison.ids : team.ids}
+              onRemove={location.view === 'compare' ? comparison.toggle : team.toggle}
+              onOpen={(pokemon) => update({ pokemon: String(pokemon.id) })}
+              onExplore={explore}
             />
-
-            {!showFavorites && selectedType === 'all' && totalPokemon > 1 && (
-              <Pagination
-                page={page}
-                totalPages={totalPages}
-                disabled={loading}
-                onPageChange={(nextPage) => {
-                  setPage(nextPage);
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                }}
-              />
-            )}
-          </>
-        )}
+          )}
+          {location.view === 'lab' && (
+            <Suspense fallback={<p role="status">Preparando laboratorio…</p>}>
+              <ResearchLab />
+              <PokeballLab />
+            </Suspense>
+          )}
+        </section>
       </main>
-
       <footer>
-        <p>
-          Proyecto educativo creado con React, TypeScript y PokéAPI.
-        </p>
+        Hecho para explorar. Datos de{' '}
+        <a href="https://pokeapi.co/" target="_blank" rel="noreferrer">
+          PokéAPI
+        </a>{' '}
+        · Pokémon pertenece a sus respectivos titulares.
       </footer>
-
-      {selectedPokemon && (
+      {location.pokemon && (
         <PokemonModal
-          pokemon={selectedPokemon}
-          favorite={isFavorite(selectedPokemon.id)}
+          name={location.pokemon}
+          favorites={favorites}
           onToggleFavorite={toggleFavorite}
-          onClose={() => setSelectedPokemon(null)}
+          onClose={() => update({ pokemon: '' }, true)}
+          onNavigate={(id) => update({ pokemon: id })}
         />
       )}
     </div>
   );
 }
-
 export default App;

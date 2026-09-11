@@ -6,19 +6,19 @@ Method: Lighthouse CLI mobile preset with simulated throttling, WAVE web evaluat
 
 ## Results
 
-| Metric | Before | After | Change |
-| --- | ---: | ---: | ---: |
-| Lighthouse Performance | 100 | 98 | -2 (normal lab variance; remains above target) |
-| Lighthouse Accessibility | 96 | 100 | +4 |
-| Lighthouse Best Practices | 100 | 100 | 0 |
-| Lighthouse SEO | 100 | 100 | 0 |
-| First Contentful Paint | 1.4 s | 1.8 s | +0.4 s |
-| Largest Contentful Paint | 1.4 s | 1.8 s | +0.4 s |
-| Total Blocking Time | 0 ms | 0 ms | 0 ms |
-| Cumulative Layout Shift | 0 | 0 | 0 |
-| WAVE errors | 0 | 0 | 0 |
-| WAVE contrast errors | 48 | 3 | -45 |
-| WAVE alerts | 21 | 0 | -21 |
+| Metric                    | Before | After |                                         Change |
+| ------------------------- | -----: | ----: | ---------------------------------------------: |
+| Lighthouse Performance    |    100 |    98 | -2 (normal lab variance; remains above target) |
+| Lighthouse Accessibility  |     96 |   100 |                                             +4 |
+| Lighthouse Best Practices |    100 |   100 |                                              0 |
+| Lighthouse SEO            |    100 |   100 |                                              0 |
+| First Contentful Paint    |  1.4 s | 1.8 s |                                         +0.4 s |
+| Largest Contentful Paint  |  1.4 s | 1.8 s |                                         +0.4 s |
+| Total Blocking Time       |   0 ms |  0 ms |                                           0 ms |
+| Cumulative Layout Shift   |      0 |     0 |                                              0 |
+| WAVE errors               |      0 |     0 |                                              0 |
+| WAVE contrast errors      |     48 |     3 |                                            -45 |
+| WAVE alerts               |     21 |     0 |                                            -21 |
 
 Both required Lighthouse categories remain above 90. The two-point performance difference is within repeat-run lab variance; the final run retained zero blocking time and zero layout shift.
 
